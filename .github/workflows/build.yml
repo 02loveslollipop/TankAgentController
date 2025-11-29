@@ -3,7 +3,7 @@ name: Build Docker Images
 on:
   push:
     branches:
-      - '**'  # Runs on pushes to any branch
+      - '**'
   pull_request:
     branches:
       - main
@@ -31,5 +31,3 @@ jobs:
           docker push registry.heroku.com/tank-auth-service/web
         env:
           HEROKU_API: ${{ secrets.HEROKU_API }}
-
-      # Add similar steps for other services as you build them
