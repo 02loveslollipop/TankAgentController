@@ -30,6 +30,7 @@ jobs:
           heroku container:release web -a tank-auth-service
         env:
           HEROKU_API: ${{ secrets.HEROKU_API }}
+          HEROKU_API_KEY: ${{ secrets.HEROKU_API }}
 
       # Add similar steps for other services as you build them, e.g.:
       # - name: Build and push backend
