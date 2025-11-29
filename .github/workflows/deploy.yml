@@ -5,8 +5,6 @@ on:
     secrets:
       HEROKU_API:
         required: true
-      HEROKU_API_KEY:
-        required: true
 
 jobs:
   deploy:
@@ -33,9 +31,9 @@ jobs:
       - name: Set stack to container
         run: heroku stack:set container -a tank-auth-service
         env:
-          HEROKU_API_KEY: ${{ secrets.HEROKU_API_KEY }}
+          HEROKU_API_KEY: ${{ secrets.HEROKU_API }}
 
       - name: Release auth_service
         run: heroku container:release web -a tank-auth-service
         env:
-          HEROKU_API_KEY: ${{ secrets.HEROKU_API_KEY }}
+          HEROKU_API_KEY: ${{ secrets.HEROKU_API }}
