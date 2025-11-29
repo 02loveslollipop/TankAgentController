@@ -16,18 +16,6 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Install Heroku CLI
-        run: curl https://cli-assets.heroku.com/install.sh | sh
-
-      - name: Log in to Heroku Container Registry
+      - name: Build auth_service Docker image
         run: |
-          echo $HEROKU_API | docker login registry.heroku.com -u _ --password-stdin
-        env:
-          HEROKU_API: ${{ secrets.HEROKU_API }}
-
-      - name: Build and push auth_service
-        run: |
-          docker build -t registry.heroku.com/tank-auth-service/web ./auth_service
-          docker push registry.heroku.com/tank-auth-service/web
-        env:
-          HEROKU_API: ${{ secrets.HEROKU_API }}
+          docker build -t auth_service:build ./auth_service
