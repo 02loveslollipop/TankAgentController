@@ -2,7 +2,7 @@ from datetime import datetime
 from types import SimpleNamespace
 
 from jose import jwt
-from ..services import auth_service as auth_module
+from auth_service.services import auth_service as auth_module
 
 
 def _make_auth_service(monkeypatch):

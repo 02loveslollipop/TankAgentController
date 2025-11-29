@@ -5,8 +5,8 @@ import pytest
 from fastapi.testclient import TestClient
 from jose import jwt
 
-from ..main import app
-from ..routes import auth as auth_routes
+from auth_service.main import app
+from auth_service.routes import auth as auth_routes
 
 
 class FakeAuthService:

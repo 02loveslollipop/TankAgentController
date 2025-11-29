@@ -2,8 +2,8 @@ from fastapi import APIRouter, HTTPException, Depends
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from jose import jwt, JWTError
 from jose.exceptions import ExpiredSignatureError
-from models import User, Token, RefreshToken
-from services.auth_service import AuthService
+from auth_service.models import User, Token, RefreshToken
+from auth_service.services.auth_service import AuthService
 import os
 
 router = APIRouter()
