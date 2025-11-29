@@ -1,8 +1,9 @@
 from fastapi import APIRouter, HTTPException, Depends
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
+from jose import jwt, JWTError
+from jose.exceptions import ExpiredSignatureError
 from models import User, Token, RefreshToken
 from services.auth_service import AuthService
-import jwt
 import os
 
 router = APIRouter()
@@ -20,9 +21,9 @@ async def get_current_user(credentials: HTTPAuthorizationCredentials = Depends(s
         username: str = payload.get("sub")
         if username is None:
             raise HTTPException(status_code=401, detail="Invalid token")
-    except jwt.ExpiredSignatureError:
+    except ExpiredSignatureError:
         raise HTTPException(status_code=401, detail="Token expired")
-    except jwt.InvalidTokenError:
+    except JWTError:
         raise HTTPException(status_code=401, detail="Invalid token")
     user = await auth_service.get_user(username)
     if user is None:
@@ -59,9 +60,9 @@ async def refresh_token(refresh: RefreshToken):
         username: str = payload.get("sub")
         if username is None:
             raise HTTPException(status_code=401, detail="Invalid token")
-    except jwt.ExpiredSignatureError:
+    except ExpiredSignatureError:
         raise HTTPException(status_code=401, detail="Refresh token expired")
-    except jwt.InvalidTokenError:
+    except JWTError:
         raise HTTPException(status_code=401, detail="Invalid token")
     db_user = await auth_service.get_user(username)
     if not db_user or db_user.get("refresh_token") != refresh.refresh_token:
