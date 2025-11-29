@@ -1,18 +1,7 @@
 from fastapi import APIRouter, HTTPException, Depends
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
-from ..models import User, Token, RefreshToken
-from ..services.auth_service import AuthService
-import jwt
-import os
-
-router = APIRouter()
-auth_service = AuthService()
-security = HTTPBearer()
-
-from fastapi import APIRouter, HTTPException, Depends
-from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
-from ..models import User, Token, RefreshToken
-from ..services.auth_service import AuthService
+from models import User, Token, RefreshToken
+from services.auth_service import AuthService
 import jwt
 import os
 
