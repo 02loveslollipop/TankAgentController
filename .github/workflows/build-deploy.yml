@@ -6,11 +6,11 @@ on:
       - main
 
 jobs:
-  build:
+  test-build:
     uses: ./.github/workflows/test-docker.yml
 
   deploy:
-    needs: build
+    needs: test-build
     uses: ./.github/workflows/deploy.yml
     secrets: inherit
 
