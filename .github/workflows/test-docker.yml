@@ -17,4 +17,4 @@ jobs:
 
       - name: Run auth_service unit tests
         run: |
-          docker run --rm auth_service:test pytest -q
+          docker run --rm -w /app -e PYTHONPATH=/app auth_service:test pytest auth_service/tests -q

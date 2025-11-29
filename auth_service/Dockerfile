@@ -3,10 +3,11 @@ FROM python:3.13-trixie
 WORKDIR /app
 ENV PYTHONPATH="/app:${PYTHONPATH}"
 
-COPY requirements.txt .
-RUN pip install -r requirements.txt
+COPY requirements.txt /app/
+RUN pip install -r /app/requirements.txt
 
-COPY . .
+# Copy the repo context into /app/auth_service so the package name exists
+COPY . /app/auth_service
 
 EXPOSE 8001
 
