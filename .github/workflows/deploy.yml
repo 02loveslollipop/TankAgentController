@@ -1,26 +1,20 @@
 name: Deploy to Heroku
 
 on:
-  workflow_run:
-    workflows:
-      - Build Docker Images
-    branches:
-      - main
-    types:
-      - completed
+  workflow_call:
+    secrets:
+      HEROKU_API:
+        required: true
+      HEROKU_API_KEY:
+        required: true
 
 jobs:
   deploy:
-    # Only deploy if the build workflow succeeded
-    if: ${{ github.event.workflow_run.conclusion == 'success' }}
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout code for built commit
+      - name: Checkout code
         uses: actions/checkout@v4
-        with:
-          repository: ${{ github.event.workflow_run.head_repository.full_name }}
-          ref: ${{ github.event.workflow_run.head_sha }}
 
       - name: Install Heroku CLI
         run: curl https://cli-assets.heroku.com/install.sh | sh
@@ -39,9 +33,9 @@ jobs:
       - name: Set stack to container
         run: heroku stack:set container -a tank-auth-service
         env:
-          HEROKU_API_KEY: ${{ secrets.HEROKU_API }}
+          HEROKU_API_KEY: ${{ secrets.HEROKU_API_KEY }}
 
       - name: Release auth_service
         run: heroku container:release web -a tank-auth-service
         env:
-          HEROKU_API_KEY: ${{ secrets.HEROKU_API }}
+          HEROKU_API_KEY: ${{ secrets.HEROKU_API_KEY }}
