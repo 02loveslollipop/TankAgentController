@@ -1,16 +1,15 @@
-name: Build
+name: Build Deploy
 
 on:
-  workflow_run:
-    workflows:
-      - Test Build
+  push:
     branches:
       - main
-    types:
-      - completed
 
 jobs:
-  build:
-    if: ${{ github.event.workflow_run.conclusion == 'success' }}
+  test-build:
+    uses: ./.github/workflows/test-docker.yml
+
+  deploy:
+    needs: test-build
     uses: ./.github/workflows/deploy.yml
     secrets: inherit
