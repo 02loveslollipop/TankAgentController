@@ -4,7 +4,7 @@ on:
   push:
     branches:
       - main
-  workflow_dispatch:  # Allows manual triggering
+  workflow_dispatch: 
 
 jobs:
   deploy:
@@ -16,6 +16,11 @@ jobs:
 
       - name: Install Heroku CLI
         run: curl https://cli-assets.heroku.com/install.sh | sh
+
+      - name: Set stack to container
+        run: heroku stack:set container -a tank-auth-service
+        env:
+          HEROKU_API_KEY: ${{ secrets.HEROKU_API }}
 
       - name: Release auth_service
         run: heroku container:release web -a tank-auth-service
