@@ -1,0 +1,25 @@
+name: Deploy to Heroku
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:  # Allows manual triggering
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Install Heroku CLI
+        run: curl https://cli-assets.heroku.com/install.sh | sh
+
+      - name: Release auth_service
+        run: heroku container:release web -a tank-auth-service
+        env:
+          HEROKU_API_KEY: ${{ secrets.HEROKU_API }}
+
+      # Add similar steps for other services as you build them

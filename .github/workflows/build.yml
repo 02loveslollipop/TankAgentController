@@ -1,13 +1,15 @@
-name: Deploy to Heroku
+name: Build Docker Images
 
 on:
   push:
     branches:
+      - '**'  # Runs on pushes to any branch
+  pull_request:
+    branches:
       - main
-  workflow_dispatch:  # Allows manual triggering
 
 jobs:
-  build-and-deploy:
+  build:
     runs-on: ubuntu-latest
 
     steps:
@@ -27,16 +29,7 @@ jobs:
         run: |
           docker build -t registry.heroku.com/tank-auth-service/web ./auth_service
           docker push registry.heroku.com/tank-auth-service/web
-          heroku container:release web -a tank-auth-service
         env:
           HEROKU_API: ${{ secrets.HEROKU_API }}
-          HEROKU_API_KEY: ${{ secrets.HEROKU_API }}
 
-      # Add similar steps for other services as you build them, e.g.:
-      # - name: Build and push backend
-      #   run: |
-      #     docker build -t registry.heroku.com/your-backend-app/web ./backend
-      #     docker push registry.heroku.com/your-backend-app/web
-      #     heroku container:release web -a your-backend-app
-      #   env:
-      #     HEROKU_API: ${{ secrets.HEROKU_API }}
+      # Add similar steps for other services as you build them
