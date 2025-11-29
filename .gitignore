@@ -1,0 +1,10 @@
+/.mypy_cache
+/auth_service
+/backend
+/development_plan.md
+/doc
+/docker-compose.yml
+/frontend
+/generate_keys.sh
+/model_training.ipynb
+/robot_sbc
