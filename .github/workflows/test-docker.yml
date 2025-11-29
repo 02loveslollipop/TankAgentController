@@ -4,7 +4,7 @@ on:
   workflow_call:
 
 jobs:
-  build:
+  build-and-test:
     runs-on: ubuntu-latest
 
     steps:
@@ -13,4 +13,8 @@ jobs:
 
       - name: Build auth_service Docker image
         run: |
-          docker build -t auth_service:build ./auth_service
+          docker build -t auth_service:test ./auth_service
+
+      - name: Run auth_service unit tests
+        run: |
+          docker run --rm auth_service:test pytest -q

@@ -1,12 +1,11 @@
-name: Build Test
+name: Test Build
 
 on:
   push:
-    branches-ignore:
-      - main
+    branches:
+      - '**'
   pull_request:
 
 jobs:
-  build:
+  test-build:
     uses: ./.github/workflows/test-docker.yml
-
