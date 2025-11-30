@@ -1,12 +1,5 @@
-from pydantic import BaseModel
+from .refresh_token import RefreshToken
+from .token import Token
+from .user import User
 
-class User(BaseModel):
-    username: str
-    password: str
-
-class Token(BaseModel):
-    access_token: str
-    token_type: str
-
-class RefreshToken(BaseModel):
-    refresh_token: str
+__all__ = ["User", "Token", "RefreshToken"]
