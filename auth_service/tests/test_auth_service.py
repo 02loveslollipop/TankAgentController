@@ -1,20 +1,24 @@
-from datetime import datetime
-from types import SimpleNamespace
+from datetime import datetime, timezone
 
 from jose import jwt
 from auth_service.services import auth_service as auth_module
 
 
 def _make_auth_service(monkeypatch):
-    class FakeDBContext:
-        def __init__(self):
-            self.database = SimpleNamespace()
+    class FakeUserRepository:
+        async def get_by_username(self, username: str):
+            return None
 
-    monkeypatch.setattr(auth_module, "DBContext", FakeDBContext)
+        async def create(self, username: str, hashed_password: str):
+            return None
+
+        async def update_refresh_token(self, username: str, refresh_token: str):
+            return None
+
     monkeypatch.setenv("JWT_ALGORITHM", "HS256")
     monkeypatch.setenv("JWT_SECRET", "test-secret")
 
-    return auth_module.AuthService()
+    return auth_module.AuthService(user_repository=FakeUserRepository())
 
 
 def test_create_access_token_contains_subject_and_exp(monkeypatch):
@@ -28,7 +32,7 @@ def test_create_access_token_contains_subject_and_exp(monkeypatch):
     # Assert
     assert payload["sub"] == "test-user"
     # exp should be in the future relative to now
-    assert payload["exp"] > int(datetime.utcnow().timestamp())
+    assert payload["exp"] > int(datetime.now(timezone.utc).timestamp())
 
 
 def test_create_refresh_token_has_longer_expiration(monkeypatch):

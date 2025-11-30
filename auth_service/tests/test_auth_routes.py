@@ -15,15 +15,11 @@ class FakeAuthService:
         self.jwt_algorithm = os.getenv("JWT_ALGORITHM", "HS256")
         self.secret_key = os.getenv("JWT_SECRET", "test-secret")
 
+    def decode_token(self, token: str):
+        return jwt.decode(token, self.secret_key, algorithms=[self.jwt_algorithm])
+
     async def get_user(self, username: str):
         return self.users.get(username)
-
-    async def create_user(self, username: str, password: str):
-        self.users[username] = {
-            "username": username,
-            "password": password,
-            "refresh_token": None,
-        }
 
     async def authenticate_user(self, username: str, password: str):
         user = self.users.get(username)
@@ -34,6 +30,25 @@ class FakeAuthService:
     async def update_refresh_token(self, username: str, refresh_token: str):
         if username in self.users:
             self.users[username]["refresh_token"] = refresh_token
+
+    async def login_user(self, username: str, password: str):
+        user = await self.authenticate_user(username, password)
+        if not user:
+            return None, None
+        access_token = self.create_access_token({"sub": username})
+        refresh_token = self.create_refresh_token({"sub": username})
+        await self.update_refresh_token(username, refresh_token)
+        return access_token, refresh_token
+
+    async def refresh_access_token(self, refresh_token: str):
+        payload = self.decode_token(refresh_token)
+        username = payload.get("sub")
+        if not username:
+            return None
+        user = await self.get_user(username)
+        if not user or user.get("refresh_token") != refresh_token:
+            return None
+        return self.create_access_token({"sub": username})
 
     def create_access_token(self, data: dict):
         to_encode = data.copy()
@@ -61,19 +76,15 @@ def client_and_service(monkeypatch):
     return client, fake_service
 
 
-def test_register_and_login_flow(client_and_service):
-    client, _ = client_and_service
+def test_login_flow_with_existing_user(client_and_service):
+    client, fake_service = client_and_service
+    # Seed a user (registration endpoint removed)
+    fake_service.users["alice"] = {
+        "username": "alice",
+        "password": "secret",
+        "refresh_token": None,
+    }
 
-    # Register a new user
-    register_response = client.post(
-        "/auth/register", json={"username": "alice", "password": "secret"}
-    )
-    assert register_response.status_code == 200
-    register_data = register_response.json()
-    assert "access_token" in register_data
-    assert register_data["token_type"] == "bearer"
-
-    # Login with the same user
     login_response = client.post(
         "/auth/login", json={"username": "alice", "password": "secret"}
     )
@@ -141,4 +152,3 @@ def test_refresh_token_flow(client_and_service):
         algorithms=["HS256"],
     )
     assert payload["sub"] == username
-
