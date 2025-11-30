@@ -6,7 +6,7 @@ This service handles user authentication for the TankAgentController system. It 
 - `main.py` - Application entrypoint and router registration
 - `routes/` - FastAPI routes (`auth.py` for login/refresh/verify)
 - `services/` - Application service logic (`auth_service.py` for auth logic)
-- `db/` - Database context (`context.py` singleton Motor client)
+- `db/` - Database context (`context.py` singleton PyMongo async client)
 - `models/` - Pydantic models for requests and responses
 - `tests/` - Pytest-based unit tests for endpoints and service logic
 
