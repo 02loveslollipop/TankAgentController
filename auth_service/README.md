@@ -1,6 +1,6 @@
 # Auth Service
 
-This service handles user authentication for the TankAgentController system. It provides endpoints for user registration, login, token issuance/refresh, and token verification using JWT. The service is built with FastAPI and uses MongoDB for user storage.
+This service handles user authentication for the TankAgentController system. It provides endpoints for login, token issuance/refresh, and token verification using JWT. The service is built with FastAPI and uses MongoDB for user storage.
 
 ## Project structure
 - `main.py` - Application entrypoint and router registration
@@ -20,17 +20,15 @@ These environment variables are used to configure the Auth Service. Fill them vi
 - `JWT_CERTIFICATE` (required if using RSA algorithm): The public key used for verifying RSA signatures.
 - `PORT` (optional): Port to run Uvicorn. Default in Docker & run steps is `8001`.
 
+## Password hashing
+- Credentials are hashed with Argon2 via `passlib` before being written to MongoDB.
+
 ## Endpoints
 - `GET /health` -> {"status":"ok"}
 - `POST /auth/login` -> login an existing user; returns access token and refresh token
 - `POST /auth/refresh` -> send `{ "refresh_token": "..." }` returns a new access token
 - `GET /auth/verify` -> requires Authorization header `Bearer <access_token>`; returns `{ "username": "..." }`
 
-Example registration with curl:
-
-```bash
-n/a (registration endpoint removed)
-```
 
 ## Docker
 Build container image (from repo root):

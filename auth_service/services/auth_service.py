@@ -6,7 +6,7 @@ from passlib.context import CryptContext
 
 from auth_service.repositories.user_repository import UserRepository
 
-pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
+pwd_context = CryptContext(schemes=["argon2"], deprecated="auto")
 
 
 class AuthService:
