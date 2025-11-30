@@ -9,6 +9,6 @@ RUN pip install -r /app/requirements.txt
 # Copy the repo context into /app/auth_service so the package name exists
 COPY . /app/auth_service
 
-EXPOSE $PORT
+EXPOSE 8001
 
-CMD ["uvicorn", "auth_service.main:app", "--host", "0.0.0.0", "--port", "$PORT"]
+CMD ["sh", "-c", "uvicorn auth_service.main:app --host 0.0.0.0 --port ${PORT:-8001}"]
