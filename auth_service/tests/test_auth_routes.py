@@ -86,7 +86,7 @@ def test_login_flow_with_existing_user(client_and_service):
     }
 
     login_response = client.post(
-        "/auth/login", json={"username": "alice", "password": "secret"}
+        "/login", json={"username": "alice", "password": "secret"}
     )
     assert login_response.status_code == 200
     login_data = login_response.json()
@@ -116,7 +116,7 @@ def test_verify_endpoint_with_valid_token(client_and_service):
     access_token = fake_service.create_access_token({"sub": username})
 
     response = client.get(
-        "/auth/verify",
+        "/verify",
         headers={"Authorization": f"Bearer {access_token}"},
     )
     assert response.status_code == 200
@@ -138,7 +138,7 @@ def test_refresh_token_flow(client_and_service):
     fake_service.users[username]["refresh_token"] = refresh_token
 
     response = client.post(
-        "/auth/refresh",
+        "/refresh",
         json={"refresh_token": refresh_token},
     )
     assert response.status_code == 200
