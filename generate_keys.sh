@@ -7,7 +7,7 @@
 SERVICES=("tank-auth-service" "backend" "rest-api-service")  # Add more as needed
 
 # JWT Algorithm (set via env or default)
-JWT_ALGORITHM=${JWT_ALGORITHM:-HS256}
+JWT_ALGORITHM=${JWT_ALGORITHM:-RS256}
 
 if [ "$JWT_ALGORITHM" == "HS256" ]; then
     # Generate a random secret for HS256
