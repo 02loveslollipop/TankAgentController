@@ -50,6 +50,8 @@ def test_user_exists_in_db():
     from pymongo import MongoClient
 
     client = MongoClient(PROD_MONGODB_URI, username=PROD_DB_USER, password=PROD_DB_PASSWORD)
-    db = client.get_default_database("robot_db") or client.get_database("robot_db")
+    db = client.get_default_database("robot_db")
+    if db is None:
+        db = client.get_database("robot_db")
     doc = db.users.find_one({"username": PROD_LOGIN_USER})
     assert doc is not None, f"User {PROD_LOGIN_USER} not found in users collection"
