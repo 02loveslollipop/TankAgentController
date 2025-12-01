@@ -1,0 +1,4 @@
+tornado==6.4.1
+pymongo==4.15.4
+google-genai==0.3.0
+pydantic==2.10.5
