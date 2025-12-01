@@ -1,0 +1,82 @@
+name: Service Pipeline
+
+on:
+  workflow_call:
+    inputs:
+      service_name:
+        description: "Logical service name (used for readability only)"
+        required: true
+        type: string
+      context:
+        description: "Docker build context directory"
+        required: true
+        type: string
+      dockerfile:
+        description: "Path to Dockerfile"
+        required: true
+        type: string
+      image:
+        description: "Fully qualified image tag to build (e.g., registry.heroku.com/app/web)"
+        required: true
+        type: string
+      test_command:
+        description: "Command to run inside the built image for tests (leave empty to skip)"
+        required: false
+        default: ""
+        type: string
+      workdir:
+        description: "Working directory inside the container when running tests"
+        required: false
+        default: "/app"
+        type: string
+      push:
+        description: "Whether to push the built image"
+        required: false
+        default: true
+        type: boolean
+      release_app:
+        description: "Heroku app name to release (empty to skip release)"
+        required: false
+        default: ""
+        type: string
+    secrets:
+      HEROKU_API:
+        required: false
+
+jobs:
+  build-test-push:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Build image
+        run: |
+          docker build -f "${{ inputs.dockerfile }}" -t "${{ inputs.image }}" "${{ inputs.context }}"
+
+      - name: Run tests
+        if: inputs.test_command != ''
+        run: |
+          docker run --rm -w "${{ inputs.workdir }}" -e PYTHONPATH="${{ inputs.workdir }}" "${{ inputs.image }}" sh -c "${{ inputs.test_command }}"
+
+      - name: Log in to Heroku Container Registry
+        if: inputs.push == true && startsWith(inputs.image, 'registry.heroku.com/')
+        run: |
+          echo "${HEROKU_API}" | docker login registry.heroku.com -u _ --password-stdin
+        env:
+          HEROKU_API: ${{ secrets.HEROKU_API }}
+
+      - name: Push image
+        if: inputs.push == true
+        run: docker push "${{ inputs.image }}"
+
+      - name: Install Heroku CLI
+        if: inputs.push == true && inputs.release_app != ''
+        run: curl https://cli-assets.heroku.com/install.sh | sh
+
+      - name: Release to Heroku
+        if: inputs.push == true && inputs.release_app != ''
+        run: heroku container:release web -a "${{ inputs.release_app }}"
+        env:
+          HEROKU_API_KEY: ${{ secrets.HEROKU_API }}

@@ -1,4 +1,4 @@
-name: Test Build
+name: Test Builds
 
 on:
   push:
@@ -7,5 +7,24 @@ on:
   pull_request:
 
 jobs:
-  test-build:
-    uses: ./.github/workflows/test-docker.yml
+  auth_service:
+    uses: ./.github/workflows/service-pipeline.yml
+    with:
+      service_name: auth_service
+      context: ./auth_service
+      dockerfile: ./auth_service/Dockerfile
+      image: auth_service:test
+      test_command: "pytest auth_service/tests -q"
+      workdir: /app
+      push: false
+
+  backend:
+    uses: ./.github/workflows/service-pipeline.yml
+    with:
+      service_name: backend
+      context: ./backend
+      dockerfile: ./backend/Dockerfile
+      image: backend:test
+      test_command: "pytest tests -q"
+      workdir: /app/backend
+      push: false
