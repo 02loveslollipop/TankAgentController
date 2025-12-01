@@ -1,5 +1,7 @@
 from datetime import datetime, timedelta
 import os
+import base64
+from binascii import Error as BinasciiError
 
 from jose import jwt
 from passlib.context import CryptContext
@@ -17,8 +19,8 @@ class AuthService:
             self.secret_key = os.getenv("JWT_SECRET")
         else:
             # For RSA-based algorithms
-            self.private_key = os.getenv("JWT_KEY")
-            self.public_key = os.getenv("JWT_CERTIFICATE")
+            self.private_key = self._load_key(os.getenv("JWT_KEY"))
+            self.public_key = self._load_key(os.getenv("JWT_CERTIFICATE"))
 
     def verify_password(self, plain_password, hashed_password):
         return pwd_context.verify(plain_password, hashed_password)
@@ -30,6 +32,23 @@ class AuthService:
         """Decode a JWT token and return its payload."""
         key = self.secret_key if self.jwt_algorithm == "HS256" else self.public_key
         return jwt.decode(token, key, algorithms=[self.jwt_algorithm])
+
+    def _load_key(self, raw_value: str | None) -> str | None:
+        """
+        Return a PEM key string, decoding base64 input when necessary.
+        Accepts either raw PEM text or a base64-encoded PEM.
+        """
+        if not raw_value:
+            return raw_value
+        # If it already looks like PEM, return as-is
+        if "BEGIN" in raw_value and "END" in raw_value:
+            return raw_value
+        try:
+            decoded = base64.b64decode(raw_value).decode("utf-8")
+            return decoded
+        except (BinasciiError, UnicodeDecodeError):
+            # Fallback to original value
+            return raw_value
 
     def create_access_token(self, data: dict):
         to_encode = data.copy()
