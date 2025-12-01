@@ -11,7 +11,7 @@ PROD_LOGIN_PASSWORD = os.getenv("PROD_LOGIN_PASSWORD")
 PROD_DB_USER = os.getenv("PROD_TEST_USER")
 PROD_DB_PASSWORD = os.getenv("PROD_TEST_PASSWORD")
 PROD_MONGODB_URI = os.getenv("PROD_MONGODB_URI")
-AUTH_LOGIN_PATH = os.getenv("AUTH_LOGIN_PATH", "/auth/login")
+AUTH_LOGIN_PATH = os.getenv("AUTH_LOGIN_PATH", "/login")
 
 
 def _url(base: str, path: str) -> str:
@@ -50,6 +50,6 @@ def test_user_exists_in_db():
     from pymongo import MongoClient
 
     client = MongoClient(PROD_MONGODB_URI, username=PROD_DB_USER, password=PROD_DB_PASSWORD)
-    db = client.get_default_database() or client["robot_db"]
+    db = client.get_default_database("robot_db") or client.get_database("robot_db")
     doc = db.users.find_one({"username": PROD_LOGIN_USER})
     assert doc is not None, f"User {PROD_LOGIN_USER} not found in users collection"
