@@ -20,16 +20,16 @@ services:
     depends_on:
       - mongo
 
-  # backend:
-  #   build: ./backend
-  #   ports:
-  #     - "8000:8000"
-  #   environment:
-  #     - MONGODB_URL=mongodb://admin:password@mongo:27017/robot_db?authSource=admin
-  #     - GEMINI_API_KEY=your-gemini-key
-  #     - SECRET_KEY=your-secret-key
-  #   depends_on:
-  #     - mongo
+  backend:
+    build: ./backend
+    ports:
+      - "8000:8000"
+    environment:
+      - MONGODB_URL=mongodb://admin:password@mongo:27017/robot_db?authSource=admin
+      - GEMINI_API_KEY=your-gemini-key
+      - SECRET_KEY=your-secret-key
+    depends_on:
+      - mongo
 
 volumes:
   mongo_data:
