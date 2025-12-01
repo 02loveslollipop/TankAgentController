@@ -53,6 +53,9 @@ jobs:
         env:
           AUTH_BASE_URL: https://auth.kanade.02labs.me
           BACKEND_BASE_URL: https://control.kanade.02labs.me
+          PROD_LOGIN_USER: ${{ secrets.PROD_LOGIN_USER }}
+          PROD_LOGIN_PASSWORD: ${{ secrets.PROD_LOGIN_PASSWORD }}
           PROD_TEST_USER: ${{ secrets.PROD_TEST_USER }}
           PROD_TEST_PASSWORD: ${{ secrets.PROD_TEST_PASSWORD }}
+          PROD_MONGODB_URI: ${{ secrets.PROD_MONGODB_URI }}
         run: python -m pytest production_tests -q
