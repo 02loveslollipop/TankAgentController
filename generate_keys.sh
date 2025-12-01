@@ -4,7 +4,7 @@
 # Update this script as more services are added
 
 # Services to update
-SERVICES=("tank-auth-service" "backend" "rest-api-service")  # Add more as needed
+SERVICES=("tank-auth-service" "tank-backend-service" "rest-api-service")
 
 # JWT Algorithm (set via env or default)
 JWT_ALGORITHM=${JWT_ALGORITHM:-RS256}
