@@ -113,6 +113,7 @@ class RobotWebSocketHandler(tornado.websocket.WebSocketHandler):
             robot_id=payload.robot_id,
             plan=plan,
             frame_id=payload.frame_id,
+            plan_id=payload.robot_state.plan_id if payload.robot_state else None,
         )
 
     def on_close(self):

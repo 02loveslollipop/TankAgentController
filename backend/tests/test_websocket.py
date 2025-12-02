@@ -60,8 +60,8 @@ class FakePlanRepository:
     def __init__(self):
         self.records = []
 
-    async def insert(self, robot_id, plan, frame_id=None):
-        self.records.append({"robot_id": robot_id, "plan": plan, "frame_id": frame_id})
+    async def insert(self, robot_id, plan, frame_id=None, plan_id=None):
+        self.records.append({"robot_id": robot_id, "plan": plan, "frame_id": frame_id, "plan_id": plan_id})
 
 
 @pytest.fixture(scope="module", autouse=True)

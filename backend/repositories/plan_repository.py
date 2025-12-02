@@ -11,12 +11,20 @@ class PlanRepository:
         context = db_context or DBContext()
         self.collection = context.database.plans
 
-    async def insert(self, robot_id: str, plan: Dict[str, Any], frame_id: Optional[str] = None):
+    async def insert(
+        self,
+        robot_id: str,
+        plan: Dict[str, Any],
+        frame_id: Optional[str] = None,
+        plan_id: Optional[str] = None,
+    ):
         doc = {
             "robot_id": robot_id,
             "plan": plan,
             "frame_id": frame_id,
+            "plan_id": plan_id,
+            "status": plan.get("status") if isinstance(plan, dict) else None,
+            "hazards": plan.get("hazards") if isinstance(plan, dict) else None,
             "timestamp": datetime.utcnow(),
         }
         await self.collection.insert_one(doc)
-

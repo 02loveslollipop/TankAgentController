@@ -19,6 +19,12 @@ class TelemetryData(BaseModel):
     extras: Optional[Dict[str, Any]] = Field(
         default=None, description="Any additional telemetry fields."
     )
+    hazard_flags: List[str] = Field(default_factory=list, description="Sensor hazards e.g. ['front_obstacle'].")
+    hard_stop: bool = Field(default=False, description="Hardware or software stop asserted.")
+    front_distance_m: Optional[float] = Field(
+        default=None, description="Front obstacle distance (meters) from ultrasonic/fused estimate."
+    )
+    notes: Optional[str] = Field(default=None, description="Additional sensor notes.")
     timestamp: Optional[str] = Field(
         default=None,
         description="ISO8601 timestamp for the telemetry reading.",
