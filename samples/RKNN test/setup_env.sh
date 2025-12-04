@@ -1,10 +1,15 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-# Minimal setup script for Debian ARM64 SBC
-# - Creates a Python venv
-# - Installs Python deps
+# Setup script for Rockchip ARM64 SBC (Radxa, Orange Pi, etc.)
+# - Installs RKNN Lite2 runtime for NPU acceleration
+# - Creates a Python venv with dependencies
+# - Downloads pre-built RKNN model from GitHub releases
 # - Installs streaming service (RTSP via MediaMTX or UDP via GStreamer)
+#
+# Prerequisites for RK356X (RK3566/RK3568):
+#   Enable NPU via: sudo rsetup -> Overlays -> Manage overlays -> Enable NPU
+#   Then restart the system.
 #
 # Usage:
 #   ./setup_env.sh          # Interactive prompt
@@ -88,8 +93,55 @@ fi
 
 if [[ -n "${PLATFORM:-}" ]]; then
   echo "[3.5/4] Detected Rockchip platform: $PLATFORM"
-  echo "Installing RKNN Lite runtime..."
-  pip install rknn-lite2 || echo "[WARN] rknn-lite2 not found in PyPI, install from Rockchip SDK"
+  
+  # Install RKNPU2 driver and rknnlite2 via apt (Radxa OS)
+  echo "Installing RKNN Lite2 runtime via apt..."
+  sudo apt-get update
+  
+  # Install python3-rknnlite2 (available on Radxa OS)
+  if sudo apt-get install -y python3-rknnlite2 2>/dev/null; then
+    echo "Installed python3-rknnlite2 via apt"
+  else
+    echo "[WARN] python3-rknnlite2 not available via apt"
+  fi
+  
+  # Install platform-specific RKNPU2 driver if needed
+  if [[ "$PLATFORM" == "rk3588" ]]; then
+    sudo apt-get install -y rknpu2-rk3588 2>/dev/null || echo "[INFO] rknpu2-rk3588 already installed or not needed"
+  else
+    sudo apt-get install -y rknpu2-rk356x 2>/dev/null || echo "[INFO] rknpu2-rk356x already installed or not needed"
+  fi
+  
+  # Check RKNPU driver version
+  echo ""
+  echo "Checking RKNPU2 driver..."
+  if dmesg | grep -q "Initialized rknpu"; then
+    RKNPU_VERSION=$(dmesg | grep "Initialized rknpu" | tail -1 | grep -oP 'rknpu \K[0-9.]+' || echo "unknown")
+    echo "RKNPU2 driver version: $RKNPU_VERSION"
+  else
+    echo "[WARN] RKNPU2 driver not detected. For RK356X, enable NPU via:"
+    echo "  sudo rsetup -> Overlays -> Manage overlays -> Enable NPU"
+    echo "Then restart the system."
+  fi
+  
+  # For venv, we need to install rknnlite2 wheel separately
+  # Try to find and install the wheel, or use system packages
+  echo ""
+  echo "Setting up rknnlite2 in virtual environment..."
+  
+  # Option 1: Try pip install (may work on some systems)
+  if ! pip install rknn-lite2 2>/dev/null; then
+    # Option 2: Link system packages to venv
+    echo "[INFO] Linking system rknnlite2 to venv..."
+    SITE_PACKAGES=$("$PYTHON_BIN" -c "import site; print(site.getsitepackages()[0])")
+    VENV_SITE_PACKAGES=$(.venv/bin/python -c "import site; print(site.getsitepackages()[0])")
+    
+    # Try to link rknnlite from system
+    if [[ -d "/usr/lib/python3/dist-packages/rknnlite" ]]; then
+      ln -sf /usr/lib/python3/dist-packages/rknnlite "$VENV_SITE_PACKAGES/" 2>/dev/null || true
+      echo "Linked rknnlite from system packages"
+    fi
+  fi
   
   # Download pre-built RKNN model from GitHub releases
   MODEL_URL="https://github.com/02loveslollipop/TankAgentController/releases/download/v1.0.0/bisenetv2_${PLATFORM}.rknn"
@@ -105,8 +157,9 @@ if [[ -n "${PLATFORM:-}" ]]; then
     echo "Model already exists: $MODEL_FILE"
   fi
 else
-  echo "[3.5/4] Not a Rockchip platform, installing ONNX runtime..."
-  pip install onnxruntime
+  echo "[3.5/4] Not a Rockchip platform - RKNN not available"
+  echo "This script is designed for Rockchip SBCs (RK3566/RK3568/RK3588)"
+  exit 1
 fi
 
 if [[ "$STREAMING_MODE" == "rtsp" ]]; then
@@ -126,13 +179,8 @@ if [[ "$STREAMING_MODE" == "rtsp" ]]; then
   echo "To start RTSP server:"
   echo "  mediamtx"
   echo ""
-  if [[ -n "${PLATFORM:-}" ]]; then
-    echo "To stream with RKNN (on SBC):"
-    echo "  python stream_bisenet_rknn.py --model models/bisenetv2_${PLATFORM}.rknn --host <client-ip> --port 5000"
-  else
-    echo "To stream with ONNX (on SBC):"
-    echo "  python stream_bisenet_rtsp.py --model model/bisenetv2.onnx --rtsp rtsp://0.0.0.0:8554/bisenet"
-  fi
+  echo "To stream (on SBC):"
+  echo "  python stream_bisenet_rtsp.py --model models/bisenetv2_${PLATFORM}.rknn"
   echo ""
   echo "To receive (on client):"
   echo "  vlc rtsp://<sbc-ip>:8554/bisenet"
@@ -153,13 +201,8 @@ elif [[ "$STREAMING_MODE" == "udp" ]]; then
   echo ""
   echo "Done. Activate venv with: source $VENV_DIR/bin/activate"
   echo ""
-  if [[ -n "${PLATFORM:-}" ]]; then
-    echo "To stream with RKNN (on SBC):"
-    echo "  python stream_bisenet_rknn.py --model models/bisenetv2_${PLATFORM}.rknn --host <client-ip> --port 5000"
-  else
-    echo "To stream with ONNX (on SBC):"
-    echo "  python stream_bisenet_udp.py --model model/bisenetv2.onnx --host 0.0.0.0 --port 5000"
-  fi
+  echo "To stream (on SBC):"
+  echo "  python stream_bisenet_udp.py --model models/bisenetv2_${PLATFORM}.rknn --host <client-ip> --port 5000"
   echo ""
   echo "To receive (on client PC with GStreamer):"
   echo "  gst-launch-1.0 udpsrc port=5000 ! application/x-rtp,encoding-name=H264 ! rtph264depay ! decodebin ! autovideosink"
