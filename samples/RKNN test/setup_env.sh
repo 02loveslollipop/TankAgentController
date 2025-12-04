@@ -74,7 +74,40 @@ source "$VENV_DIR/bin/activate"
 
 echo "[3/4] Installing Python dependencies..."
 pip install --upgrade pip
-pip install opencv-python onnxruntime numpy
+pip install opencv-python numpy
+
+# Check if we're on a Rockchip platform
+if [[ -f /proc/device-tree/compatible ]]; then
+  COMPATIBLE=$(cat /proc/device-tree/compatible 2>/dev/null | tr '\0' ' ')
+  if [[ "$COMPATIBLE" == *"rk3588"* ]]; then
+    PLATFORM="rk3588"
+  elif [[ "$COMPATIBLE" == *"rk3568"* ]] || [[ "$COMPATIBLE" == *"rk3566"* ]]; then
+    PLATFORM="rk3566"
+  fi
+fi
+
+if [[ -n "${PLATFORM:-}" ]]; then
+  echo "[3.5/4] Detected Rockchip platform: $PLATFORM"
+  echo "Installing RKNN Lite runtime..."
+  pip install rknn-lite2 || echo "[WARN] rknn-lite2 not found in PyPI, install from Rockchip SDK"
+  
+  # Download pre-built RKNN model from GitHub releases
+  MODEL_URL="https://github.com/02loveslollipop/TankAgentController/releases/download/v1.0.0/bisenetv2_${PLATFORM}.rknn"
+  MODEL_DIR="models"
+  MODEL_FILE="${MODEL_DIR}/bisenetv2_${PLATFORM}.rknn"
+  
+  mkdir -p "$MODEL_DIR"
+  if [[ ! -f "$MODEL_FILE" ]]; then
+    echo "Downloading RKNN model from GitHub releases..."
+    curl -fsSL "$MODEL_URL" -o "$MODEL_FILE"
+    echo "Model saved to: $MODEL_FILE"
+  else
+    echo "Model already exists: $MODEL_FILE"
+  fi
+else
+  echo "[3.5/4] Not a Rockchip platform, installing ONNX runtime..."
+  pip install onnxruntime
+fi
 
 if [[ "$STREAMING_MODE" == "rtsp" ]]; then
   echo "[4/4] Installing MediaMTX (RTSP server) $RTSP_VERSION..."
@@ -93,8 +126,13 @@ if [[ "$STREAMING_MODE" == "rtsp" ]]; then
   echo "To start RTSP server:"
   echo "  mediamtx"
   echo ""
-  echo "To stream (on SBC):"
-  echo "  python stream_bisenet_rtsp.py --model /path/to/bisenetv2.onnx --rtsp rtsp://0.0.0.0:8554/bisenet"
+  if [[ -n "${PLATFORM:-}" ]]; then
+    echo "To stream with RKNN (on SBC):"
+    echo "  python stream_bisenet_rknn.py --model models/bisenetv2_${PLATFORM}.rknn --host <client-ip> --port 5000"
+  else
+    echo "To stream with ONNX (on SBC):"
+    echo "  python stream_bisenet_rtsp.py --model model/bisenetv2.onnx --rtsp rtsp://0.0.0.0:8554/bisenet"
+  fi
   echo ""
   echo "To receive (on client):"
   echo "  vlc rtsp://<sbc-ip>:8554/bisenet"
@@ -115,8 +153,13 @@ elif [[ "$STREAMING_MODE" == "udp" ]]; then
   echo ""
   echo "Done. Activate venv with: source $VENV_DIR/bin/activate"
   echo ""
-  echo "To stream (on SBC):"
-  echo "  python stream_bisenet_udp.py --model /path/to/bisenetv2.onnx --host 0.0.0.0 --port 5000"
+  if [[ -n "${PLATFORM:-}" ]]; then
+    echo "To stream with RKNN (on SBC):"
+    echo "  python stream_bisenet_rknn.py --model models/bisenetv2_${PLATFORM}.rknn --host <client-ip> --port 5000"
+  else
+    echo "To stream with ONNX (on SBC):"
+    echo "  python stream_bisenet_udp.py --model model/bisenetv2.onnx --host 0.0.0.0 --port 5000"
+  fi
   echo ""
   echo "To receive (on client PC with GStreamer):"
   echo "  gst-launch-1.0 udpsrc port=5000 ! application/x-rtp,encoding-name=H264 ! rtph264depay ! decodebin ! autovideosink"
