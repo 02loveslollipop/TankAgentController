@@ -124,23 +124,38 @@ if [[ -n "${PLATFORM:-}" ]]; then
     echo "Then restart the system."
   fi
   
-  # For venv, we need to install rknnlite2 wheel separately
-  # Try to find and install the wheel, or use system packages
+  # Link system rknnlite2 to venv (pip install doesn't work for this package)
   echo ""
   echo "Setting up rknnlite2 in virtual environment..."
   
-  # Option 1: Try pip install (may work on some systems)
-  if ! pip install rknn-lite2 2>/dev/null; then
-    # Option 2: Link system packages to venv
-    echo "[INFO] Linking system rknnlite2 to venv..."
-    SITE_PACKAGES=$("$PYTHON_BIN" -c "import site; print(site.getsitepackages()[0])")
-    VENV_SITE_PACKAGES=$(.venv/bin/python -c "import site; print(site.getsitepackages()[0])")
-    
-    # Try to link rknnlite from system
-    if [[ -d "/usr/lib/python3/dist-packages/rknnlite" ]]; then
-      ln -sf /usr/lib/python3/dist-packages/rknnlite "$VENV_SITE_PACKAGES/" 2>/dev/null || true
-      echo "Linked rknnlite from system packages"
+  VENV_SITE_PACKAGES=$(.venv/bin/python -c "import site; print(site.getsitepackages()[0])")
+  SYS_DIST_PACKAGES="/usr/lib/python3/dist-packages"
+  
+  # Link rknnlite package directory
+  if [[ -d "$SYS_DIST_PACKAGES/rknnlite" ]]; then
+    ln -sf "$SYS_DIST_PACKAGES/rknnlite" "$VENV_SITE_PACKAGES/" 2>/dev/null || true
+    echo "Linked rknnlite module to venv"
+  else
+    echo "[ERROR] rknnlite not found at $SYS_DIST_PACKAGES/rknnlite"
+    echo "Please install with: sudo apt install python3-rknnlite2"
+    exit 1
+  fi
+  
+  # Also link any .dist-info or .egg-info for proper package detection
+  for info_dir in "$SYS_DIST_PACKAGES"/rknn*info "$SYS_DIST_PACKAGES"/RKNN*info; do
+    if [[ -d "$info_dir" ]]; then
+      ln -sf "$info_dir" "$VENV_SITE_PACKAGES/" 2>/dev/null || true
+      echo "Linked $(basename "$info_dir")"
     fi
+  done
+  
+  # Verify rknnlite is importable
+  if .venv/bin/python -c "from rknnlite.api import RKNNLite; print('rknnlite OK')" 2>/dev/null; then
+    echo "[OK] rknnlite is working in venv"
+  else
+    echo "[ERROR] rknnlite import failed. Check installation."
+    echo "Try running outside venv: python3 -c 'from rknnlite.api import RKNNLite'"
+    exit 1
   fi
   
   # Download pre-built RKNN model from GitHub releases

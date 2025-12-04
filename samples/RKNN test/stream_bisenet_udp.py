@@ -142,9 +142,15 @@ def load_rknn(model_path: Path):
     try:
         from rknnlite.api import RKNNLite
     except ImportError:
-        print("[ERROR] rknn-lite2 not installed!")
-        print("  Install with: pip install rknn-lite2")
-        print("  Or from Rockchip SDK: https://github.com/airockchip/rknn-toolkit2")
+        print("[ERROR] rknnlite not found!")
+        print("")
+        print("On Radxa OS, install via apt:")
+        print("  sudo apt update && sudo apt install python3-rknnlite2")
+        print("")
+        print("If using a venv, link the system package:")
+        print("  ln -sf /usr/lib/python3/dist-packages/rknnlite $(python -c 'import site; print(site.getsitepackages()[0])')/")
+        print("")
+        print("Or download wheel from: https://github.com/airockchip/rknn-toolkit2")
         sys.exit(1)
     
     rknn = RKNNLite()
